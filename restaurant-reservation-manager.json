@@ -1,0 +1,398 @@
+{
+  "name": "restaurant-reservation-manager",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "seconds",
+              "secondsInterval": 5
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "ac961e37-62f7-4abc-b300-1d2234b62be3",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "reservations",
+          "mode": "list",
+          "cachedResultName": "reservations"
+        },
+        "returnAll": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        220,
+        0
+      ],
+      "id": "67a06fab-a9a7-4d9a-9a51-79737e1059f1",
+      "name": "Select rows from a table",
+      "credentials": {
+        "postgres": {
+          "id": "rxO0rKT1yR8EueLT",
+          "name": "Get Reservations"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f29ac4f7-76cd-4bc4-acea-66569c5bba7f",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "WAITING",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        440,
+        0
+      ],
+      "id": "09e95468-e6fe-4048-9abd-737be11548dd",
+      "name": "Check Waiting Status"
+    },
+    {
+      "parameters": {
+        "fromEmail": "iimezo.zidan@gmail.com",
+        "toEmail": "={{ $json.email }}",
+        "subject": "🍽️ Your Table is Ready!",
+        "html": "=<h2>Hello {{ $json.customer_name }},</h2>\n\n<p>Your table is now ready.</p>\n\n<p><b>Table Number:</b> {{ $json.table_number }}</p>\n\n<p><b>Guests:</b> {{ $json.party_size }}</p>\n\n<p>We look forward to serving you!</p>",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        660,
+        -100
+      ],
+      "id": "3154de59-61eb-463b-9f1e-3b622a48f2a1",
+      "name": "Send Table Ready Email",
+      "webhookId": "4c008ab1-88d2-4e7d-b4b8-c90669ebe5fe",
+      "credentials": {
+        "smtp": {
+          "id": "7pi46DxFclgsYGGs",
+          "name": "SMTP account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "reservations",
+          "mode": "list",
+          "cachedResultName": "reservations"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $('Check Waiting Status').item.json.id }}",
+            "table_number": "={{ $('Check Waiting Status').item.json.table_number }}",
+            "party_size": "={{ $('Check Waiting Status').item.json.party_size }}",
+            "customer_name": "={{ $('Check Waiting Status').item.json.customer_name }}",
+            "email": "={{ $('Check Waiting Status').item.json.email }}",
+            "status": "NOTIFIED",
+            "created_at": "={{ $('Check Waiting Status').item.json.created_at }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "customer_name",
+              "displayName": "customer_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "table_number",
+              "displayName": "table_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "party_size",
+              "displayName": "party_size",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        940,
+        -100
+      ],
+      "id": "6f2530b5-463c-4c5e-8840-a083a8b9c223",
+      "name": "Update Reservation Status",
+      "credentials": {
+        "postgres": {
+          "id": "rxO0rKT1yR8EueLT",
+          "name": "Get Reservations"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "reservation_reports",
+          "mode": "list",
+          "cachedResultName": "reservation_reports"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "reservation_id": "={{ $json.id }}",
+            "customer_name": "={{ $json.customer_name }}",
+            "status": "NOTIFIED"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "reservation_id",
+              "displayName": "reservation_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "customer_name",
+              "displayName": "customer_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "logged_at",
+              "displayName": "logged_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1280,
+        -100
+      ],
+      "id": "491e4e27-3d6a-4b15-b3c1-5195a274e265",
+      "name": "Log Reservation",
+      "credentials": {
+        "postgres": {
+          "id": "rxO0rKT1yR8EueLT",
+          "name": "Get Reservations"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Select rows from a table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Select rows from a table": {
+      "main": [
+        [
+          {
+            "node": "Check Waiting Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Waiting Status": {
+      "main": [
+        [
+          {
+            "node": "Send Table Ready Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Table Ready Email": {
+      "main": [
+        [
+          {
+            "node": "Update Reservation Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Reservation Status": {
+      "main": [
+        [
+          {
+            "node": "Log Reservation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "bdff062a-df64-4047-aaa6-a39629bde6ad",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0d597bc4579aba1bf0928fff3ab18156d8247baa406ed8ad554e19f84e0a86ed"
+  },
+  "id": "NnBZOXZMrFFQ0JNH",
+  "tags": []
+}
